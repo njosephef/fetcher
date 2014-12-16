@@ -52,6 +52,7 @@ class fileBatchWriteback(config: Config, control: Control) extends genericBatchR
           val s = x.toJson + "\n";
 //          log.info("Writing " + s + " contain to " + file)
           file.write(s);
+//          file.write(x("fetch_data"))
           doit(xs)
         }
         case Nil =>
