@@ -96,6 +96,9 @@ class HttpFetcher(config: Config,
     val redirect = if (currentUrl != url) Some(currentUrl) else None
     val entity = response.getEntity()
     val page = EntityUtils.toByteArray(entity)
+
+    println(page)
+
     val status = response.getStatusLine()
     val code = status.getStatusCode()
     EntityUtils.consume(entity)
@@ -121,7 +124,7 @@ class HttpFetcher(config: Config,
       case _ => false
     }
 
-    data + ("fetch_compress", "none")
+//    data + ("fetch_compress", "none")
 
     log.info("data information " + data.toJson())
 
@@ -146,12 +149,14 @@ class HttpFetcher(config: Config,
 
 //        val retcode = code.toString
 
-        val o0 = ("fetch_time", Time.convertoSecond.toString) ::
+        val o0 =
+            ("fetch_time", Time.convertoSecond.toString) ::
           ("fetch_latency", latency.toString) ::
           ("fetch_size", page.length.toString) ::
           ("fetch_status_code", code.toString) ::
           ("fetch_status_line", status.toString) ::
-          ("fetch_error", "false") :: Nil
+          ("fetch_error", "false") ::
+          Nil
 
         val o = redirect match {
           case Some(u) => ("fetch_redirect", u) :: o0
@@ -170,7 +175,8 @@ class HttpFetcher(config: Config,
 
         if (code >= 200 && code < 300) {
           /*("fetch_compress", if (compress) "zip64" else "none") ::("fetch_data", zpage) :: o*/
-          ("fetch_compress", "none") ::("fetch_data", zpage) :: o
+//          ("fetch_compress", "none") ::("fetch_data", zpage) :: o
+          ("fetch_data", zpage) :: o
         }
         else o
       }

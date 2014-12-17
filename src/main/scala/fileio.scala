@@ -2,14 +2,13 @@
 // Fureteur - https://github.com/gip/fureteur  //
 // /////////////////////////////////////////// //
 
-/*
-package fureteur.fileio
+import java.io.File
 
-import fureteur.sync._
-import fureteur.data._
-import fureteur.control._
-import fureteur.config._
-*/
+import org.apache.commons.io.FileUtils
+import org.json4s.ShortTypeHints
+import org.json4s.jackson.Serialization
+
+case class HTMLContent(url:String, html:String)
 
 // Taking URLs in batches from a file
 class fileBatchPrefetcher(config: Config, control: Control)
@@ -20,7 +19,7 @@ class fileBatchPrefetcher(config: Config, control: Control)
   val file = config("file_name")
 
   log.info("Opening " + file)
-  val data = scala.io.Source.fromFile(file).getLines.toArray
+  val data = scala.io.Source.fromFile(file).getLines().toArray
   var index = 0
   var batch = 0
 
@@ -32,7 +31,7 @@ class fileBatchPrefetcher(config: Config, control: Control)
     batch += 1
     val listURL = data.slice(index - sz, index).toList
     log.info("Fetched " + listURL.length.toString + " entrie(s) from " + file)
-    val d = Data.empty
+    val d = Data.empty()
     Some(listURL map (e => d ++ List(("fetch_url", e), ("batch", batch.toString))))
   }
 }
@@ -41,17 +40,30 @@ class fileBatchPrefetcher(config: Config, control: Control)
 class fileBatchWriteback(config: Config, control: Control) extends genericBatchReseller[Data](control) {
 
   //val log = Logging(context.system, this)
-  val fname = config("file_name")
-  val file = new java.io.FileWriter(fname)
+  val fileName = config("file_name")
 
   def resell(batch: List[Data]) = {
-    log.info("Writing " + batch.length.toString + " entrie(s) to " + file)
+    log.info("Writing " + batch.length.toString + " entrie(s) to " + fileName)
     def doit(b: List[Data]): Unit = {
       b match {
         case x :: xs => {
-          val s = x.toJson + "\n";
-//          log.info("Writing " + s + " contain to " + file)
-          file.write(s);
+          // get just important information, fetch_url and fetch_data
+          // then convert them to a json string
+          implicit val formats = Serialization.formats(
+            ShortTypeHints(
+              List(
+                classOf[HTMLContent]
+              )
+            )
+          )
+
+          val content = new HTMLContent(x("fetch_url"), x("fetch_data"))
+          val json = Serialization.writePretty(content)
+          FileUtils writeStringToFile(new File(fileName), json, "UTF-8")
+
+//          val s = x.toJson + "\n"
+//          FileUtils writeStringToFile(new File(fileName), s, "UTF-8")
+
           doit(xs)
         }
         case Nil =>

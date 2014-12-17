@@ -30,7 +30,14 @@ class amqpBatchPrefetcher(config: Config,
   }
   
   class EmptyQueue extends Exception
-  
+
+
+
+
+
+
+
+
   def getMessage(): Data = {
     val autoAck = false
     val response = chan.basicGet(queue, autoAck)
