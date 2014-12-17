@@ -4,10 +4,6 @@
 
 import java.io.File
 
-import org.apache.commons.io.FileUtils
-import org.json4s.ShortTypeHints
-import org.json4s.jackson.Serialization
-
 case class HTMLContent(url:String, html:String)
 
 // Taking URLs in batches from a file
