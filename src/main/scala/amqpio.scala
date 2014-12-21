@@ -2,25 +2,17 @@
 // Fureteur - https://github.com/gip/fureteur  //
 // /////////////////////////////////////////// //
 
-//package fureteur.amqpio
-
 /*import akka.actor.Actor
 import akka.actor.Props
 import akka.event.Logging*/
 import com.rabbitmq.client._
 
-/*import fureteur.config._
-import fureteur.data._
-import fureteur.sync._
-import fureteur.control._
-import fureteur.config._*/
-
 // Prefetching an AMQP queue
-//
 class amqpBatchPrefetcher(config: Config,
                           control: Control,
                           chan: Channel) 
-      extends genericBatchProducer[Data](config.getInt("batch_size"), config.getInt("threshold_in_batches"), config.getLongOption("timeout_ms"), control) {
+      extends genericBatchProducer[Data](config.getInt("batch_size"), config.getInt("threshold_in_batches"),
+        config.getLongOption("timeout_ms"), control) {
   
   //val log = Logging(context.system, this)
   val queue = config("queue")
@@ -30,13 +22,6 @@ class amqpBatchPrefetcher(config: Config,
   }
   
   class EmptyQueue extends Exception
-
-
-
-
-
-
-
 
   def getMessage(): Data = {
     val autoAck = false
@@ -62,13 +47,11 @@ class amqpBatchPrefetcher(config: Config,
   
 }
 
-
 // Writing back to an AMQP exchange
-//
 class amqpBatchWriteback(config: Config, control: Control, chan: Channel) extends genericBatchReseller[Data](control) {
 
   //val log = Logging(context.system, this)
-  val exch= config("exchange")
+  val exch = config("exchange")
 
   def resell(batch: List[Data]) = {  
     batch match {
@@ -81,8 +64,9 @@ class amqpBatchWriteback(config: Config, control: Control, chan: Channel) extend
               case _ => "Error" 
             }
         } catch { case _ => "Error" }
+
         val fqp= "fetch_routing_key"
-        val fullkey = if(x exists fqp) { x(fqp)+":"+key } else { key }
+        val fullkey = if(x exists fqp) { x(fqp)+ ":" + key } else { key }
         chan.basicPublish(exch, fullkey, MessageProperties.PERSISTENT_TEXT_PLAIN, x.toBytes)
         chan.basicAck(deliveryTag, false)
         log.info("Publishing message to " + exch + " and acking delivery tag " + deliveryTag)

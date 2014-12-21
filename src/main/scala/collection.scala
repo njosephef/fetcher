@@ -2,13 +2,10 @@
 // Fureteur - https://github.com/gip/fureteur  //
 // /////////////////////////////////////////// //
 
-//package fureteur.collection
-
 import scala.collection.mutable.Queue
 
 
 // A mutable FIFO with optional alert callback
-//
 class FIFO[T](x: Option[(Int, Int => Unit)]) {
 
   val queue = new Queue[T]
