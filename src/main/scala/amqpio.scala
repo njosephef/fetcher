@@ -1,6 +1,3 @@
-// /////////////////////////////////////////// //
-// Fureteur - https://github.com/gip/fureteur  //
-// /////////////////////////////////////////// //
 
 /*import akka.actor.Actor
 import akka.actor.Props
@@ -10,17 +7,17 @@ import com.rabbitmq.client._
 // Prefetching an AMQP queue
 class amqpBatchPrefetcher(config: Config,
                           control: Control,
-                          chan: Channel) 
+                          chan: Channel)
       extends genericBatchProducer[Data](config.getInt("batch_size"), config.getInt("threshold_in_batches"),
         config.getLongOption("timeout_ms"), control) {
-  
+
   //val log = Logging(context.system, this)
   val queue = config("queue")
-  
+
   override def init() = {
     // InitAMPQ
   }
-  
+
   class EmptyQueue extends Exception
 
   def getMessage(): Data = {
@@ -33,9 +30,10 @@ class amqpBatchPrefetcher(config: Config,
     val deliveryTag= response.getEnvelope().getDeliveryTag()
     log.info("Fetched message from " + queue +" with delivery tag " + deliveryTag)
     val d = Data.fromBytes(body)
+    log.info(d.toJson())
     d + ("fetch_queue_delivery_tag", deliveryTag.toString)
   }
-  
+
   override def getBatch(sz:Int):Option[List[Data]] = {
     def rec(c:Int, l:List[Data]):List[Data] = { try { if(0==c) { l } else { rec(c-1, getMessage()::l ) } } catch { case e:EmptyQueue => l } }
 
@@ -52,6 +50,7 @@ class amqpBatchWriteback(config: Config, control: Control, chan: Channel) extend
 
   //val log = Logging(context.system, this)
   val exch = config("exchange")
+  log.info(exch)
 
   def resell(batch: List[Data]) = {  
     batch match {
@@ -67,6 +66,7 @@ class amqpBatchWriteback(config: Config, control: Control, chan: Channel) extend
 
         val fqp= "fetch_routing_key"
         val fullkey = if(x exists fqp) { x(fqp)+ ":" + key } else { key }
+        log.info(x("fetch_url"))
         chan.basicPublish(exch, fullkey, MessageProperties.PERSISTENT_TEXT_PLAIN, x.toBytes)
         chan.basicAck(deliveryTag, false)
         log.info("Publishing message to " + exch + " and acking delivery tag " + deliveryTag)
